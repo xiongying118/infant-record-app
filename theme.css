@@ -1084,6 +1084,12 @@ span.lr-dyn:empty{display:inline-block;min-width:90px;min-height:14px;
 .lr-solacts{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:10px 0 2px;
   padding:7px 10px;border:1px dashed #bfd3f0;border-radius:7px;background:#f6f9fe}
 .lr-solacts .muted{font-size:11px;line-height:1.5;flex:1 1 240px;min-width:0}
+/* 标准溶液「说明」折叠：默认收起，点开才看长文 */
+.lr-help{font-size:12px}
+.lr-help summary{cursor:pointer;color:var(--brand);font-weight:600;padding:3px 0;list-style:none;display:inline-flex;align-items:center;gap:5px}
+.lr-help summary::-webkit-details-marker{display:none}
+.lr-help summary:before{content:"▸";font-size:11px;transition:transform .15s}
+.lr-help[open] summary:before{transform:rotate(90deg)}
 .lr-soltabs{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 2px}
 .lr-soltab{padding:5px 12px;border:1px solid var(--line);border-radius:999px;
   background:var(--panel);color:var(--ink2);font-size:11.5px;cursor:pointer;line-height:1.5}

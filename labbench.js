@@ -2261,25 +2261,29 @@
     var nm=(v==="all")?"全部":((lrProject(v)||{name:v}).name);
     return '<details class="lr-solbar" id="lrSolBar" style="margin-bottom:12px">'+
       '<summary id="lrSolSummary">标准溶液维护（当前：'+esc(nm)+'）· 只列这个项目的，点「全部」才出全部</summary>'+
-      '<div class="muted" style="font-size:11.5px;line-height:1.6;margin:8px 0 2px">'+
-      '编码、批号和有效期至<b>打印时不用填</b>，默认就是 Word 原表里的值。'+
-      lrVisiblePs().length+' 份原表里只有 '+lrSolProjects().length+
-      ' 个项目有标准溶液，这里默认只列其中一个项目；'+
-      '点上面的项目名切换，点「全部」才一次看全。'+
-      '哪种溶液过期重新配制了，改一次本机记住，不用每次打印都改。'+
-      '<br><b>需配制</b>的：填「配制日期」（可手写或点 📅 选，只收今天起 30 天内）自动生成编码，'+
-      '填「有效期」数字选天/月自动生成有效期至（如 20261119 + 3月 → 20270218）。'+
-      '<b>外购</b>的：编码和有效期至手填，前缀填错会弹窗拦下。</div>'+
+      '<details class="lr-help" style="margin:8px 0 10px">'+
+        '<summary>说明</summary>'+
+        '<div class="muted" style="font-size:11.5px;line-height:1.6;padding:8px 2px 0">'+
+        '编码、批号和有效期至<b>打印时不用填</b>，默认就是 Word 原表里的值。'+
+        lrVisiblePs().length+' 份原表里只有 '+lrSolProjects().length+
+        ' 个项目有标准溶液，这里默认只列其中一个项目；'+
+        '点上面的项目名切换，点「全部」才一次看全。'+
+        '哪种溶液过期重新配制了，改一次本机记住，不用每次打印都改。'+
+        '<br><b>需配制</b>的：填「配制日期」（可手写或点 📅 选，只收今天起 30 天内）自动生成编码，'+
+        '填「有效期」数字选天/月自动生成有效期至（如 20261119 + 3月 → 20270218）。'+
+        '<b>外购</b>的：编码和有效期至手填，前缀填错会弹窗拦下。'+
+        '<br><br><b>配制日期、有效期自动取自试剂效期管理系统</b>：那边一改，这里自动更新，不用手填；'+
+        '本页手改仍可（要口令），只要试剂系统那条没变，下次同步不会冲掉手改的值。'+
+        '</div></details>'+
       '<div class="lr-solacts">'+
+        '<a class="btn sm pri" href="https://reagent-expiry-95771.app.workbuddy.host/?sharecode=L5HTJSEPAI" target="_blank" rel="noopener noreferrer" '+
+          'style="text-decoration:none;display:inline-flex;align-items:center;gap:4px">🧪 试剂效期管理系统</a>'+
         '<button type="button" class="btn sm" onclick="LAB.lrReagentSyncNow()">🔄 立即从试剂系统同步</button>'+
         '<label class="btn sm" style="cursor:pointer;margin:0;display:inline-flex;align-items:center">'+
           '↙ 从旧系统导入一次'+
           '<input type="file" accept=".csv,.xlsx,.xls" style="display:none" '+
             'onchange="LAB.lrReagentFile(this)"></label>'+
         lrReagentDiagHtml()+
-        '<span class="muted"><b>配制日期、有效期自动取自同站点的试剂效期管理系统</b>：那边一改，这里自动更新，不用手填；'+
-          '本页手改仍可（要口令），只要试剂系统那条没变，下次同步不会冲掉手改的值。'+
-          '第一次用请先在旧系统「导出 CSV」，点左边按钮导一次。</span>'+
       '</div>'+
       lrSolTabsHtml(v)+'<div id="lrSolBody">'+lrSolBodyHtml(v)+'</div></details>';
   }
@@ -2303,7 +2307,8 @@
     if(!LRSEL){
       LRSEL={};
       var s=global.Store?global.Store.get("lab.record.sel.v1",null):null;
-      if(s&&s.length){ s.forEach(function(k){ LRSEL[k]=1; }); }
+      /* 单选：旧版存了多个也只保留第一个，避免刷新后又变回多选 */
+      if(s&&s.length){ LRSEL[s[0]]=1; }
       else { var ps=lrProjects(); if(ps.length) LRSEL[ps[0].key]=1; }
     }
     return LRSEL;
@@ -2437,23 +2442,14 @@
   }
   function lrPreviewHtml(){
     var picked=lrSelected();
-    if(!picked.length) return '<div class="card empty">上面勾一个检测项目，对应的 Word 原始记录就出来。</div>';
-    /* ★ 系统性解决卡死：页面默认一张都不渲染（每页几百 KB 矢量底图），
-       只列项目按钮，点哪个画哪个；打印仍按全部选中项目生成。 */
-    var cur = null;
-    for(var i=0;i<picked.length;i++){ if(picked[i].key===LR_PREVIEW_KEY){ cur=picked[i]; break; } }
-    var bar = '<div class="card lr-prevbar"><div class="card-h"><h3>页面预览</h3>'+
-      '<span class="muted">已选 '+picked.length+' 个项目 · 默认不渲染，点项目名看单页（打印不受影响）</span></div>'+
-      '<div class="lr-chips">'+picked.map(function(p){
-        return '<button class="btn sm '+(p.key===LR_PREVIEW_KEY?"pri":"")+'" onclick="LAB.lrPrevOne(\''+esc(p.key)+'\')">'+
-          esc(p.name)+'</button>';
-      }).join("")+'</div></div>';
-    if(!cur) return bar;
+    if(!picked.length) return '<div class="card empty">上面选一个检测项目，对应的 Word 原始记录就出来。</div>';
+    /* ★ 单选直出：选中项目即渲染页面，不再需要点第二下 */
+    var cur = picked[0];
+    LR_PREVIEW_KEY = cur.key;
     var pages = ((global.LABPAGES||{})[cur.key]||{pages:[]}).pages.length;
-    return bar + '<div class="card lr-card" style="margin-bottom:12px"><div class="card-h">'+
-      '<h3>'+esc(cur.name)+(cur.unit?'（'+esc(cur.unit)+'）':'')+'</h3>'+
+    return '<div class="card lr-card" style="margin-bottom:12px"><div class="card-h">'+
+      '<h3>页面预览 · '+esc(cur.name)+(cur.unit?'（'+esc(cur.unit)+'）':'')+'</h3>'+
       '<span class="muted">'+esc(cur.file)+' · Word 原页 100% 复刻（共 '+pages+' 页）</span><div class="sp"></div>'+
-      '<button class="btn sm" onclick="LAB.lrPrevOne(\'\')">收起预览</button>'+
       '<button class="btn sm" onclick="LAB.lrPrintOne(\''+esc(cur.key)+'\')">🖨 只打此项目（全部样品）</button></div>'+
       '<div class="lr-scroll">'+lrSheetHtml(cur)+'</div></div>';
   }
@@ -2526,8 +2522,7 @@
           return x.key===lrGroup(); })[0]||{}).name||"理化组"))+
         ' '+gp.length+' 个</span><div class="sp"></div>'+
       '<button class="btn sm pri" onclick="LAB.lrMode(\'project\')">按检测项目</button>'+
-      '<button class="btn sm" onclick="LAB.lrMode(\'method\')">按方法标准</button>'+
-      '<a class="btn sm" href="https://xiongying118.github.io/infant-record-app/" target="_blank" rel="noopener noreferrer">↗ 独立工作系统</a></div>'+
+      '<button class="btn sm" onclick="LAB.lrMode(\'method\')">按方法标准</button></div>'+
       '<div class="notice" style="margin:10px 0"><span>📋</span><div>'+
       '<b>Word 原页 100% 复刻</b>：每页直接用 Word 导出的原页，标题位置、字体字号、列宽行高、'+
       '框线、公式图、页码、哪一页放什么内容全部原样，打印不带浏览器页眉页脚。'+
@@ -2545,14 +2540,12 @@
        ★ 按检测项目过滤，默认只出当前项目的，点「全部」才出全部 */
     h+=lrSolPanelHtml();
     h+='<div class="card" style="margin-bottom:12px"><div class="card-h">'+
-      '<h3>选择检测项目</h3><span class="muted">当前 '+gp.length+' 个 · 选 1 个 / 几个 / 全部都行</span><div class="sp"></div>'+
-      '<button class="btn sm" title="只选当前分类里的项目" onclick="LAB.lrAll()">全选本组</button>'+
-      '<button class="btn sm" onclick="LAB.lrNone()">清空</button>'+
-      '<button class="btn pri sm" id="lrPrintBtn" onclick="LAB.lrPrint()">🖨 打印全部（'+total+' 份）</button></div>'+
+      '<h3>选择检测项目</h3><span class="muted">当前 '+gp.length+' 个 · 单选，选中即出页面预览</span><div class="sp"></div>'+
+      '<button class="btn pri sm" id="lrPrintBtn" onclick="LAB.lrPrint()">🖨 打印（'+total+' 份）</button></div>'+
       lrGroupTabsHtml()+
       '<div class="lr-chips">'+gp.map(function(p){
         return '<label class="lr-chip '+(s[p.key]?"on":"")+'">'+
-          '<input type="checkbox" '+(s[p.key]?"checked":"")+
+          '<input type="radio" name="lrProject" '+(s[p.key]?"checked":"")+
           ' onchange="LAB.lrToggle(\''+esc(p.key)+'\')">'+
           '<b>'+esc(p.name)+'</b>'+(p.unit?'<span class="muted">'+esc(p.unit)+'</span>':'')+
           '</label>';
@@ -2597,7 +2590,7 @@
     var cnt=document.getElementById("lrPickCount");
     if(cnt) cnt.textContent="已选 "+st.on+" / "+st.all+" 个样品";
     var btn=document.getElementById("lrPrintBtn");
-    if(btn) btn.textContent="🖨 打印全部（"+lrPrintCount()+" 份）";
+    if(btn) btn.textContent="🖨 打印（"+lrPrintCount()+" 份）";
     var head=document.getElementById("lrSampleHead");
     if(head) head.textContent="样品清单（共 "+st.all+" 个 · 已选 "+st.on+" 个 · 点左边方框勾选）";
     lrStatMsg("已选 "+st.on+" 个样品 × "+n+" 个项目 = "+lrPrintCount()+
@@ -2802,7 +2795,7 @@
     if(host) host.innerHTML=lrPreviewHtml();
     lrBindPageLoad();
     var n=lrSelected().length, rows=lrActiveRows().length, btn=document.getElementById("lrPrintBtn");
-    if(btn) btn.textContent="🖨 打印全部（"+lrPrintCount()+" 份）";
+    if(btn) btn.textContent="🖨 打印（"+lrPrintCount()+" 份）";
     var s=lrSel(), ps=lrGroupProjects();
     [].forEach.call(document.querySelectorAll(".lr-chip"),function(el,i){
       var p=ps[i]; if(!p) return;
@@ -2814,28 +2807,18 @@
   }
   function lrToggle(k){
     if(!lrCan(k)){ lrAlert("【"+((lrProject(k)||{}).name||k)+"】不是当前操作人负责的项目，已锁定不能改。切到对应的操作人才能用。"); return; }
-    var s=lrSel();
-    if(s[k]){
-      delete s[k];
-      if(LRSOLVIEW===k) LRSOLVIEW=null;      // 取消该项目后回到跟随当前项目
-    } else {
-      s[k]=1;
-      if(lrSelected().length===1) LRSOLVIEW=k; // ★ 只点一个项目 → 只列它的标准溶液
-    }
+    LRSEL={}; LRSEL[k]=1;        // ★ 单选：一次只留一个项目
+    LRSOLVIEW=k;                 // 标准溶液跟着当前项目走
+    LR_PREVIEW_KEY=k;            // 预览直接出该项目，不需要再点一次
     lrSave(); lrRedraw();
   }
   function lrAll(){
-    var s=lrSel(); lrGroupProjects().forEach(function(p){ s[p.key]=1; });
-    LRSOLVIEW="all";                          // ★ 只有点「全部/全选」才显示全部
-    lrSave(); lrRedraw();
+    var ps=lrGroupProjects(); if(!ps.length) return;
+    lrToggle(ps[0].key);         // 「全选本组」在单站改为选本组第一个
   }
   function lrNone(){
-    /* ★ 清空只清本人负责的项目，别把同事已勾的从公共数据里删掉 */
-    if(lrAuthOn()){
-      var s=lrSel();
-      lrVisiblePs().forEach(function(p){ delete s[p.key]; });
-    } else LRSEL={};
-    LRSOLVIEW=null; lrSave(); lrRedraw();
+    /* 单选站不允许完全不选：退回第一个项目 */
+    var ps=lrVisiblePs(); if(ps.length) lrToggle(ps[0].key);
   }
   function lrNotes(){ return false; }   /* 兼容旧调用，方法说明已在原表内 */
   function lrMode(m){ LRMODE=m; render(); }
