@@ -1423,8 +1423,19 @@
     if(fix) return {prefix:fix,date:"",suffix:"01",bought:false,empty:true};
     return null;
   }
+  /* ★ 日期规范化：原 Word 原表里的有效期常写成 2026.12.24 / 2026-12-24 / 2026/12/24，
+     统一转成 8 位 20261224 再校验，避免把合法原表值误报成「不是有效日期」。 */
+  function normDate8(s){
+    if(s==null) return "";
+    var t=String(s).trim();
+    if(/^\d{8}$/.test(t)) return t;
+    var m=/^(\d{4})[.\-\/年](\d{1,2})[.\-\/月](\d{1,2})日?$/.exec(t);
+    if(!m) return "";
+    return m[1]+String(+m[2]).padStart(2,"0")+String(+m[3]).padStart(2,"0");
+  }
   function isValidDate8(s){
-    if(!/^\d{8}$/.test(String(s))) return false;
+    s=normDate8(s);
+    if(!/^\d{8}$/.test(s)) return false;
     var y=+s.slice(0,4),mo=+s.slice(4,6),d=+s.slice(6,8);
     var dt=new Date(y,mo-1,d);
     return dt.getFullYear()===y&&dt.getMonth()===mo-1&&dt.getDate()===d;
@@ -1467,13 +1478,14 @@
      返回错误文案或 null；只在用户主动改动时调用，避免打开页面就弹窗 */
   function checkExpiryLogic(name,pdate,expiry){
     if(!expiry) return null;
-    if(!isValidDate8(expiry)) return "【"+name+"】有效期至不是有效日期（应为 8 位，如 20270218）";
-    if(isValidDate8(pdate)&&expiry<=pdate)
-      return "【"+name+"】有效期至 "+fmtDash(expiry)+" 早于配制日期 "+fmtDash(pdate)+
+    var ex8=normDate8(expiry), pd8=normDate8(pdate);
+    if(!isValidDate8(ex8)) return "【"+name+"】有效期至不是有效日期（应如 2027-02-18 或 20270218）";
+    if(isValidDate8(pd8)&&ex8<=pd8)
+      return "【"+name+"】有效期至 "+fmtDash(ex8)+" 早于配制日期 "+fmtDash(pd8)+
         "，不符合逻辑，请检查有效期天数和配制日期";
     var t=today().replace(/-/g,"");
-    if(expiry<t)
-      return "【"+name+"】有效期至 "+fmtDash(expiry)+" 早于今天（今天 "+today()+
+    if(ex8<t)
+      return "【"+name+"】有效期至 "+fmtDash(ex8)+" 早于今天（今天 "+today()+
         "），该溶液已过期，不能用于检测";
     return null;
   }
@@ -1498,17 +1510,20 @@
         var code=ov.code||src.code||"";
         var pd=(ov.pdate|| (solParts(n,code)||{}).date) || "";
         var ex=ov.expiry||src.expiry||"";
-        /* 配置里存的是有效期数值+单位，需按配制日期推算有效期至 */
+        /* 已有明确有效期（含 2026.12.24 这类点号格式）就直接用；
+           只有「需配制、靠天数推算」的才按配制日期算 */
         var calc=ex;
-        if(!/^\d{8}$/.test(calc) && pd && ov.dur){
+        if(!isValidDate8(calc) && pd && ov.dur){
           var n2=parseInt(ov.dur,10)||0, u=(ov.unit==="m"||ov.unit==="月")?"m":"d";
           if(n2>0) calc=date8Add(pd,n2,u);
         }
         if(!calc) return;
-        if(!isValidDate8(calc)){ out.push("【"+n+"】有效期至不是有效日期："+calc); return; }
-        if(pd && isValidDate8(pd) && calc<=pd)
-          out.push("【"+n+"】有效期至 "+fmtDash(calc)+" 早于配制日期 "+fmtDash(pd));
-        if(calc<t) out.push("【"+n+"】有效期至 "+fmtDash(calc)+" 已过期，不能用于检测");
+        /* 原表日期可能是 2026.12.24 这类点号格式，先规范化再比较 */
+        var calc8=normDate8(calc), pd8=normDate8(pd);
+        if(!isValidDate8(calc8)){ out.push("【"+n+"】有效期至不是有效日期："+calc); return; }
+        if(pd8 && isValidDate8(pd8) && calc8<=pd8)
+          out.push("【"+n+"】有效期至 "+fmtDash(calc8)+" 早于配制日期 "+fmtDash(pd8));
+        if(calc8<t) out.push("【"+n+"】有效期至 "+fmtDash(calc8)+" 已过期，不能用于检测");
       });
     });
     return out;
