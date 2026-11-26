@@ -1477,7 +1477,19 @@
     return null;
   }
   function fmtDash(s){ return /^\d{8}$/.test(s)?s.slice(0,4)+"-"+s.slice(4,6)+"-"+s.slice(6,8):s; }
-  /* ★★★ 统一警示弹窗（2026-11-22）：深墨蓝标题栏 + 金线 + ⚠ + 居中卡片，替掉原生 alert */
+  /* ★ 按错误内容给出「正确填法」规则，让弹窗不只报错，还告诉用户怎么填 */
+  function lrRulesFor(t){
+    if(/前缀|代码|编码/.test(t))
+      return ["编码前缀固定，按 Word 原表保留，不要改","日期段填 8 位有效日期，如 20241031","只有「外购」标准品需要手填编码"];
+    if(/有效期至|早于今天|过期|入库日期/.test(t))
+      return ["有效期至必须晚于配制日期 / 入库日期","且不能早于今天 —— 过期溶液不能用于检测","改配制日期或有效期后会自动重算"];
+    if(/1~999|整数|有效期要填/.test(t))
+      return ["有效期填 1～999 的整数","单位选「天」或「月」","有效期至自动生成，不用手填"];
+    if(/日期|8 位|30 天前/.test(t))
+      return ["配制日期填 8 位数字，如 20261119","必须是真实日期，不能晚于今天","最早只能填 30 天内的日期"];
+    return [];
+  }
+  /* ★★★ 统一警示弹窗：深墨蓝标题栏 + 金线 + ⚠ + 正确填法规则卡 + 居中卡片 */
   function lrAlert(msg){
     var text=String(msg==null?"":msg);
     var lines=text.split(/\n+/).filter(function(s){ return s.trim(); });
@@ -1487,20 +1499,26 @@
     var restored=/已恢复原值/.test(text);
     var body=first.replace(/[，,]?\s*已恢复原值。?\s*$/,"").replace(/。$/,"");
     var items=lines.slice(1).filter(function(s){ return !/^已恢复原值/.test(s); });
+    var rules=lrRulesFor(text);
     [].forEach.call(document.querySelectorAll(".lr-mask.lr-alertmask"),function(e){
       if(e.parentNode) e.parentNode.removeChild(e);
     });
     var mask=document.createElement("div"); mask.className="lr-mask lr-alertmask";
     var itemHtml=items.map(function(s){ return "<li>"+esc(s)+"</li>"; }).join("");
+    var ruleHtml=rules.length
+      ? '<div class="lr-dlg-rules"><div class="lr-dlg-rules-t">✓ 正确填法</div><ul>'+
+        rules.map(function(s){ return "<li>"+esc(s)+"</li>"; }).join("")+'</ul></div>'
+      : '';
     mask.innerHTML='<div class="lr-dlg" role="alertdialog" aria-modal="true">'+
       '<div class="lr-dlg-h"><div class="lr-dlg-ic">⚠</div><div>'+
-        '<h3>'+esc(name?(name+" · 填写提示"):"填写提示")+'</h3>'+
-        '<div class="lr-dlg-sub">分析检测中心 · 原始记录系统</div>'+
+        '<h3>'+esc(name?(name+" · 填写规则提醒"):"填写规则提醒")+'</h3>'+
+        '<div class="lr-dlg-sub">分析检测中心 · 原始记录生成系统</div>'+
       '</div></div>'+
       '<div class="lr-dlg-b">'+
         (body?'<p class="lr-dlg-lead" style="font-size:15px">'+esc(body)+'</p>':'')+
         (itemHtml?'<div class="lr-dlg-list"><ul>'+itemHtml+'</ul></div>':'')+
-        (restored?'<p class="lr-dlg-note">已恢复原来的值，改好后重试即可。</p>':'')+
+        ruleHtml+
+        (restored?'<p class="lr-dlg-note">已恢复原来的值，按上面的规则改好后重试即可。</p>':'')+
       '</div>'+
       '<div class="lr-dlg-f"><button type="button" class="lr-dlg-btn ok lr-alert-ok">知道了</button></div>'+
     '</div>';
@@ -1594,15 +1612,10 @@
       restore();
       if(typeof onCancel==="function") onCancel();
     };
-    ensureLabAuth(function(ok){
-      /* 缺口令文件（且补加载也失败）时绝不放行，避免缓存导致口令失效 */
-      if(ok){
-        /* ★ 没有溶液名 → 无法判定负责人 → 绝不放行（早期 bug 就是这里静默写了库） */
-        if(!name){ cancel(); lrAlert("无法识别该标准溶液，修改已取消。请刷新页面后重试。"); return; }
-        global.LABAUTH.editGuard(name, core, cancel);
-      }
-      else { cancel(); lrAlert("口令校验未能加载，修改已取消。请按 Ctrl+F5 强制刷新后重试。"); }
-    });
+    /* ★ 独立站：数据只在本机，去掉负责人口令闸门，直接放行填写；
+       填错由下面各字段的校验规则 + 弹窗提示，不再用口令挡住输入。 */
+    if(!name){ cancel(); lrAlert("无法识别该标准溶液，修改已取消。请刷新页面后重试。"); return; }
+    if(typeof core==="function") core();
   }
   /* batch 只改批号，但也是标准溶液维护的一部分，同样要口令 */
   function lrSetSolBatch(el){
@@ -2514,7 +2527,8 @@
     try{ lrReagentHook(); lrReagentSync(); }catch(e){}
     var ps=lrVisiblePs(), s=lrSel(), n=lrSelected().length, gp=lrGroupProjects();
     var rows=lrActiveRows().length, total=lrPrintCount();
-    var h=(global.LABAUTH&&global.LABAUTH.barHtml)?global.LABAUTH.barHtml():'';
+    /* 独立站无口令闸门：不显示旧的负责人口令条 */
+    var h='';
     h+='<div class="card" style="margin-bottom:12px"><div class="card-h">'+
       '<h3>原始记录 · 按检测项目出模板</h3>'+
       '<span class="muted">共 '+ps.length+' 个检测项目'+(lrAuthOn()?'（本人负责）':'')+' · 当前分类 '+
