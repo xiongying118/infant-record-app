@@ -1459,8 +1459,9 @@
     return days>0?{n:""+days,u:"d"}:{n:"",u:"m"};
   }
   function date8Limit(){
-    var lim=new Date(); lim.setHours(0,0,0,0); lim.setDate(lim.getDate()-30);
-    return fmt8(lim);
+    /* 补录旧记录：配制日期允许填任意过去的真实日期，不再限制 30 天内。
+       只拦「晚于今天」和「无效日期」，编码按所填日期自动生成。 */
+    return "19000101";
   }
   /* ★ 有效期逻辑校验：有效期至必须晚于配制日期，且不能早于今天。
      返回错误文案或 null；只在用户主动改动时调用，避免打开页面就弹窗 */
@@ -1477,6 +1478,77 @@
     return null;
   }
   function fmtDash(s){ return /^\d{8}$/.test(s)?s.slice(0,4)+"-"+s.slice(4,6)+"-"+s.slice(6,8):s; }
+  /* ★ 打印前校验：汇总所有要打印项目里的标准溶液，找出「有效期至早于配制日期 /
+     已过期 / 有效期至无效」的逻辑错误，弹窗提醒（仍可确认后继续打印）。 */
+  function lrPrintSolWarnings(picked){
+    var seen={}, out=[];
+    var t=today().replace(/-/g,"");
+    picked.forEach(function(p){
+      var g=(global.LABPAGES||{})[p.key];
+      var names=[];
+      /* 从原始项目配置里取该项目的溶液名 */
+      var proj=lrProject(p.key);
+      if(proj && proj.solutions) proj.solutions.forEach(function(s){ names.push(s.name); });
+      /* 也把本机改过的溶液纳入（按名字匹配当前项目） */
+      var O=lrSol()||{};
+      Object.keys(O).forEach(function(n){
+        var src=solOrig(n);
+        if(src && proj && proj.solutions && proj.solutions.indexOf) { /* 已在上面 */ }
+        if(names.indexOf(n)<0 && src) names.push(n);
+      });
+      names.forEach(function(n){
+        if(seen[n]) return; seen[n]=1;
+        /* 优先取本机覆盖值，回落到 Word 原表 */
+        var src=solOrig(n)||{};
+        var ov=O[n]||{};
+        var code=ov.code||src.code||"";
+        var pd=(ov.pdate|| (solParts(n,code)||{}).date) || "";
+        var ex=ov.expiry||src.expiry||"";
+        /* 配置里存的是有效期数值+单位，需按配制日期推算有效期至 */
+        var calc=ex;
+        if(!/^\d{8}$/.test(calc) && pd && ov.dur){
+          var n2=parseInt(ov.dur,10)||0, u=(ov.unit==="m"||ov.unit==="月")?"m":"d";
+          if(n2>0) calc=date8Add(pd,n2,u);
+        }
+        if(!calc) return;
+        if(!isValidDate8(calc)){ out.push("【"+n+"】有效期至不是有效日期："+calc); return; }
+        if(pd && isValidDate8(pd) && calc<=pd)
+          out.push("【"+n+"】有效期至 "+fmtDash(calc)+" 早于配制日期 "+fmtDash(pd));
+        if(calc<t) out.push("【"+n+"】有效期至 "+fmtDash(calc)+" 已过期，不能用于检测");
+      });
+    });
+    return out;
+  }
+  function lrConfirmPrint(warns, onYes){
+    [].forEach.call(document.querySelectorAll(".lr-mask.lr-printmask"),function(e){
+      if(e.parentNode) e.parentNode.removeChild(e);
+    });
+    var mask=document.createElement("div"); mask.className="lr-mask lr-printmask";
+    var items=warns.map(function(s){ return "<li>"+esc(s)+"</li>"; }).join("");
+    mask.innerHTML='<div class="lr-dlg" role="alertdialog" aria-modal="true">'+
+      '<div class="lr-dlg-h"><div class="lr-dlg-ic">⚠</div><div>'+
+        '<h3>标准溶液逻辑检查</h3><div class="lr-dlg-sub">分析检测中心 · 原始记录生成系统</div>'+
+      '</div></div>'+
+      '<div class="lr-dlg-b"><p class="lr-dlg-lead">发现 '+warns.length+' 处逻辑错误，打印前请核对：</p>'+
+        '<div class="lr-dlg-list"><ul>'+items+'</ul></div>'+
+        '<p class="lr-dlg-note">这些问题会原样打进记录里。请回标准溶液维护里改好后重试，或确认仍要打印。</p>'+
+      '</div>'+
+      '<div class="lr-dlg-f"><button type="button" class="lr-dlg-btn no lr-print-cancel">返回修改</button>'+
+        '<button type="button" class="lr-dlg-btn ok lr-print-go">仍要打印</button></div>'+
+    '</div>';
+    function done(yes){
+      if(mask.parentNode) mask.parentNode.removeChild(mask);
+      document.removeEventListener("keydown",onKey);
+      if(yes && onYes) onYes();
+    }
+    function onKey(e){ if(e.key==="Escape") done(false); }
+    mask.querySelector(".lr-print-cancel").onclick=function(){ done(false); };
+    mask.querySelector(".lr-print-go").onclick=function(){ done(true); };
+    mask.addEventListener("click",function(e){ if(e.target===mask) done(false); });
+    document.addEventListener("keydown",onKey);
+    document.body.appendChild(mask);
+    try{ mask.querySelector(".lr-print-cancel").focus(); }catch(e){}
+  }
   /* ★ 按错误内容给出「正确填法」规则，让弹窗不只报错，还告诉用户怎么填 */
   function lrRulesFor(t){
     if(/前缀|代码|编码/.test(t))
@@ -1486,7 +1558,7 @@
     if(/1~999|整数|有效期要填/.test(t))
       return ["有效期填 1～999 的整数","单位选「天」或「月」","有效期至自动生成，不用手填"];
     if(/日期|8 位|30 天前/.test(t))
-      return ["配制日期填 8 位数字，如 20261119","必须是真实日期，不能晚于今天","最早只能填 30 天内的日期"];
+      return ["配制日期填 8 位数字，如 20261119","必须是真实的年月日，不能晚于今天","编码会按所填日期自动生成，补录旧记录也可以"];
     return [];
   }
   /* ★★★ 统一警示弹窗：深墨蓝标题栏 + 金线 + ⚠ + 正确填法规则卡 + 居中卡片 */
@@ -1537,7 +1609,6 @@
     if(!isValidDate8(s)) return "日期要填 8 位真实数字（如 20261119）";
     var t=today().replace(/-/g,"");
     if(s>t) return "配制日期不能晚于今天（今天是 "+today()+"）";
-    if(s<date8Limit()) return "配制日期不能早于 30 天前（最早 "+date8Limit().replace(/(\d{4})(\d{2})(\d{2})/,"$1-$2-$3")+"）";
     return null;
   }
   function lrSyncDyn(name,d){
@@ -1612,10 +1683,15 @@
       restore();
       if(typeof onCancel==="function") onCancel();
     };
-    /* ★ 独立站：数据只在本机，去掉负责人口令闸门，直接放行填写；
-       填错由下面各字段的校验规则 + 弹窗提示，不再用口令挡住输入。 */
-    if(!name){ cancel(); lrAlert("无法识别该标准溶液，修改已取消。请刷新页面后重试。"); return; }
-    if(typeof core==="function") core();
+    /* ★ 标准溶液编辑：输该项负责人的口令后才写入（防止被他人误改）。
+       取消/口令错时由上面 cancel() 恢复原值。 */
+    ensureLabAuth(function(ok){
+      if(ok){
+        if(!name){ cancel(); lrAlert("无法识别该标准溶液，修改已取消。请刷新页面后重试。"); return; }
+        global.LABAUTH.editGuard(name, core, cancel);
+      }
+      else { cancel(); lrAlert("口令校验未能加载，修改已取消。请按 Ctrl+F5 强制刷新后重试。"); }
+    });
   }
   /* batch 只改批号，但也是标准溶液维护的一部分，同样要口令 */
   function lrSetSolBatch(el){
@@ -2861,6 +2937,15 @@
     var picked=only?[p0].filter(Boolean):lrSelected();
     var st=document.getElementById("lrStat");
     if(!picked.length){ if(st) st.textContent="先勾一个检测项目再打印。"; return; }
+    /* ★ 打印前标准溶液逻辑校验：过期 / 有效期早于配制日期 → 弹窗提醒确认 */
+    var warns=lrPrintSolWarnings(picked);
+    if(warns.length){
+      lrConfirmPrint(warns, function(){ lrPrintGo(picked, lrActiveRows(), st); });
+      return;
+    }
+    return lrPrintGo(picked, lrActiveRows(), st);
+  }
+  function lrPrintGo(picked, rows, st){
     /* ★ 批量：样品清单每一行 × 勾选的每个项目，一次全部送打印 */
     var rows=lrActiveRows(), body="", pages=0;
     if(!rows.length){
