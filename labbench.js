@@ -1484,18 +1484,12 @@
     var seen={}, out=[];
     var t=today().replace(/-/g,"");
     picked.forEach(function(p){
-      var g=(global.LABPAGES||{})[p.key];
-      var names=[];
-      /* 从原始项目配置里取该项目的溶液名 */
+      /* ★ 只校验当前要打印项目自己的标准溶液，别把其它项目改过的溶液一起提示 */
       var proj=lrProject(p.key);
-      if(proj && proj.solutions) proj.solutions.forEach(function(s){ names.push(s.name); });
-      /* 也把本机改过的溶液纳入（按名字匹配当前项目） */
+      if(!proj || !proj.solutions || !proj.solutions.length) return;
+      var names=[];
+      proj.solutions.forEach(function(s){ if(s && s.name) names.push(s.name); });
       var O=lrSol()||{};
-      Object.keys(O).forEach(function(n){
-        var src=solOrig(n);
-        if(src && proj && proj.solutions && proj.solutions.indexOf) { /* 已在上面 */ }
-        if(names.indexOf(n)<0 && src) names.push(n);
-      });
       names.forEach(function(n){
         if(seen[n]) return; seen[n]=1;
         /* 优先取本机覆盖值，回落到 Word 原表 */
