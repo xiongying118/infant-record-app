@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>分析检测中心 · 原始记录生成系统</title>
+<link rel="stylesheet" href="theme.css?v=202611262100">
+<style>
+/* ===== 独立系统 · 分析检测中心 原始记录生成系统 =====
+   本文件为独立入口：不含任何食品质量/标准管理系统的 HTML 结构或脚本。 */
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);font-family:var(--font,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif);color:var(--ink,#1B2A44)}
+/* 顶部居中品牌头 */
+.solo-hero{
+  margin:0;padding:32px 24px 28px;text-align:center;
+  background:linear-gradient(135deg,#12305c 0%,#1b3a6b 55%,#245089 100%);
+  border-radius:0 0 22px 22px;color:#fff;position:relative;overflow:hidden;
+  box-shadow:0 8px 24px rgba(16,40,78,.18);
+}
+.solo-hero:before,.solo-hero:after{content:"";position:absolute;border-radius:50%;pointer-events:none}
+.solo-hero:before{width:320px;height:320px;right:-90px;top:-190px;background:radial-gradient(circle,rgba(201,162,39,.28),transparent 70%)}
+.solo-hero:after{width:260px;height:260px;left:-110px;bottom:-190px;background:radial-gradient(circle,rgba(14,124,107,.25),transparent 70%)}
+.solo-hero .mark{font-size:26px;line-height:1;margin-bottom:10px;color:#e8c95a;position:relative}
+.solo-hero h1{margin:0;font-size:26px;font-weight:750;letter-spacing:3px;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.18);position:relative}
+.solo-hero .rule{width:70px;height:3px;margin:13px auto 10px;border-radius:3px;background:linear-gradient(90deg,transparent,#e8c95a,transparent);position:relative}
+.solo-hero p{margin:0;font-size:13px;letter-spacing:1px;color:#cfe0f5;position:relative}
+.solo-wrap{max-width:1180px;margin:0 auto;padding:0 22px 60px}
+.solo-tip{display:flex;align-items:center;gap:10px;margin:22px 0 16px;padding:11px 16px;border-radius:12px;
+  background:#fff;border:1px solid var(--line);box-shadow:var(--sh-1);color:var(--ink2);font-size:12.5px}
+.solo-tip b{color:var(--brand)}
+.solo-tip .dot{flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 4px var(--teal-soft)}
+.solo-foot{text-align:center;color:var(--ink3);font-size:11.5px;padding:26px 12px 8px}
+@media(max-width:700px){.solo-hero{padding:24px 16px 22px}.solo-hero h1{font-size:20px;letter-spacing:1px}.solo-wrap{padding:0 12px 40px}}
+@media print{.solo-hero,.solo-tip,.solo-foot{display:none !important}}
+</style>
+</head>
+<body>
+<div class="solo-hero">
+  <div class="mark">⚗</div>
+  <h1>分析检测中心 · 原始记录生成系统</h1>
+  <div class="rule"></div>
+  <p>原始记录生成 · 空白表单框架 · 现场手填签字</p>
+</div>
+<div class="solo-wrap">
+  <div class="solo-tip"><span class="dot"></span><span><b>使用说明</b>　选检测项目 → 生成空白记录表 → 打印手签。数据只保存在本机浏览器。</span></div>
+  <div id="labBody"></div>
+  <div class="solo-foot">分析检测中心 · 原始记录生成系统　·　数据本机保存，不上传</div>
+</div>
+<div id="dlgHost"></div>
+
+<!-- ===== 生成器依赖脚本（与旧系统完全无关，纯数据 + 记录生成逻辑） ===== -->
+<script>
+/* 数据隔离：本站所有本机数据加 recapp: 前缀，与主站互不影响。
+   试剂效期管理系统共享的 key 例外放行。 */
+(function(){
+  try{
+    var P="recapp:", LS=window.localStorage, SHARE=/^reagentManager\./;
+    function K(x){ return SHARE.test(String(x)) ? String(x) : P+x; }
+    var g=LS.getItem.bind(LS), s=LS.setItem.bind(LS), r=LS.removeItem.bind(LS), k=LS.key.bind(LS);
+    var lenGet=Object.getOwnPropertyDescriptor(Storage.prototype,"length").get;
+    function mine(kk){ return !!kk && (kk.indexOf(P)===0 || SHARE.test(kk)); }
+    LS.getItem=function(x){ return g(K(x)); };
+    LS.setItem=function(x,v){ return s(K(x),v); };
+    LS.removeItem=function(x){ return r(K(x)); };
+    LS.key=function(i){
+      var n=0;
+      for(var j=0;j<lenGet.call(LS);j++){ var kk=k(j); if(mine(kk)){ if(n===i) return kk; n++; } }
+      return null;
+    };
+    Object.defineProperty(LS,"length",{get:function(){
+      var n=0; for(var j=0;j<lenGet.call(LS);j++){ if(mine(k(j))) n++; } return n;
+    },configurable:true});
+  }catch(e){}
+})();
+</script>
+<script src="data.js?v=202611262100"></script>
+<script src="guard.js?v=202611262100"></script>
+<script src="store.js?v=202611262100"></script>
+<script src="labdata.js?v=202611262100"></script>
+<script src="labdata2.js?v=202611262100"></script>
+<script src="labcost.js?v=202611262100"></script>
+<script src="ledger.js?v=202611262100"></script>
+<script src="labledger.js?v=202611262100"></script>
+<script src="labrecord.js?v=202611262100"></script>
+<script src="labpages.js?v=202611262100"></script>
+<script src="labauth.js?v=202611262100"></script>
+<script>
+/* ===== 精简工具函数（仅生成器用到） ===== */
+function escHtml(s){ return String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function esc(s){ return escHtml(s); }
+function $(s){ return document.querySelector(s); }
+function $$(s){ return [...document.querySelectorAll(s)]; }
+let _dlgOnClose=null;
+function dlg(opt){
+  var host=$("#dlgHost"), kind=opt.kind||"info";
+  var icon={danger:"🗑",warn:"⚠",info:"ℹ"}[kind]||"ℹ";
+  host.innerHTML='<div class="mask" id="dlgMask"><div class="dlg '+kind+'" role="dialog" aria-modal="true">'+
+    '<div class="dlg-h"><span class="ic">'+icon+'</span><div class="t">'+(opt.title||"")+'</div></div>'+
+    '<div class="dlg-b">'+(opt.body||"")+'</div>'+
+    (opt.fields?'<div class="dlg-b" style="padding-top:0">'+opt.fields+'</div>':'')+
+    '<div class="dlg-f">'+(opt.buttons||[{t:"知道了",cls:"pri"}]).map(function(b,i){
+      return '<button class="btn '+(b.cls||"")+'" data-i="'+i+'">'+b.t+'</button>';
+    }).join("")+'</div></div></div>';
+  var btns=[...host.querySelectorAll(".dlg-f button")];
+  var close=function(v){ host.innerHTML=""; _dlgOnClose=null; if(opt.onClose) opt.onClose(v); };
+  _dlgOnClose=close;
+  btns.forEach(function(b,i){ b.onclick=function(){
+    var def=(opt.buttons||[])[i]||{};
+    if(def.val==="cancel"||def.val===false){ close(false); return; }
+    if(opt.collect){
+      var vals={}, bad=null;
+      (opt.collect||[]).forEach(function(f){
+        var el=host.querySelector(f.sel), v=el?el.value.trim():"";
+        if(f.required && !v && !bad) bad=f;
+        vals[f.name]=v;
+      });
+      if(bad){ toast(bad.msg||("请填写「"+bad.label+"」"),"warn"); return; }
+      close(vals); return;
+    }
+    close(def.val===undefined?true:def.val);
+  };});
+  var mask=$("#dlgMask"); if(mask) mask.onclick=function(e){ if(e.target.id==="dlgMask") close(false); };
+  var first=host.querySelector("input[type=text], select")||btns[btns.length-1];
+  if(first) first.focus();
+}
+function toast(msg,kind){ dlg({kind:kind||"info",title:"提示",body:escHtml(msg)}); }
+function downloadCsv(filename, rows){
+  if(!rows||!rows.length){ toast("没有可导出的数据","warn"); return; }
+  function q(v){
+    var s=(v==null?"":String(v));
+    var out=s.replace(/"/g,'""');
+    if(/^[=+\-@\t\r]/.test(out)) out="'"+out;
+    return '"'+out+'"';
+  }
+  var csv="\ufeff"+rows.map(function(r){return r.map(q).join(",");}).join("\r\n");
+  var blob=new Blob([csv],{type:"text/csv;charset=utf-8"}), url=URL.createObjectURL(blob);
+  var a=document.createElement("a"); a.href=url; a.download=filename;
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); },200);
+}
+window.toast=toast; window.dlg=dlg; window.downloadCsv=downloadCsv;
+window.esc=esc; window.escHtml=escHtml;
+</script>
+<script src="labbench.js?v=202611262100"></script>
+<script>
+/* 启动：只渲染原始记录生成器，去掉负责人口令闸门。
+   数据仅存本机；填错由各字段校验 + 规则弹窗提示。 */
+(function(){
+  function boot(){
+    try{
+      if(window.LABAUTH && typeof LABAUTH.editGuard==="function"){
+        LABAUTH.editGuard=function(name,onOk){ if(typeof onOk==="function") onOk(); };
+      }
+      if(window.LAB){
+        if(typeof LAB.render==="function") LAB.render();
+        if(typeof LAB.go==="function") LAB.go("record");
+      }
+    }catch(e){}
+  }
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",boot);
+  else boot();
+})();
+</script>
+</body>
+</html>
