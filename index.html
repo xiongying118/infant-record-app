@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>分析检测中心 · 原始记录生成系统</title>
-<link rel="stylesheet" href="theme.css?v=202611262150">
+<link rel="stylesheet" href="theme.css?v=202611262160">
 <style>
 /* ===== 独立系统 · 分析检测中心 原始记录生成系统 =====
    本文件为独立入口：不含任何食品质量/标准管理系统的 HTML 结构或脚本。 */
@@ -37,6 +37,18 @@ body{background:var(--bg) !important}
 .solo-tip .dot{flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 4px var(--teal-soft)}
 .solo-foot{text-align:center;color:var(--ink3);font-size:11.5px;padding:26px 12px 8px}
 @media(max-width:700px){.solo-hero{padding:24px 16px 22px}.solo-hero h1{font-size:20px;letter-spacing:1px}.solo-wrap{padding:0 12px 40px}}
+/* ===== 标签/项目按钮：加大字号、强化选中对比，字更清楚 ===== */
+.lr-grouptab{font-size:13.5px !important;padding:7px 15px !important;font-weight:600;color:var(--ink)}
+.lr-grouptab i{font-size:12px !important;opacity:.95 !important;font-weight:700}
+.lr-grouptab.on{background:var(--brand) !important;color:#fff !important;font-weight:750 !important;
+  box-shadow:0 2px 8px rgba(27,58,107,.28)}
+.lr-chip{font-size:13.5px !important;padding:8px 14px !important;color:var(--ink)}
+.lr-chip b{font-weight:650;color:var(--ink)}
+.lr-chip.on{background:var(--brand) !important;border-color:var(--brand) !important;color:#fff !important;
+  box-shadow:0 2px 8px rgba(27,58,107,.28)}
+.lr-chip.on b,.lr-chip.on .muted{color:#fff !important}
+.lr-soltab{font-size:13px !important;font-weight:600;color:var(--ink)}
+.lr-soltab.on{font-weight:750 !important;box-shadow:0 2px 8px rgba(27,58,107,.28)}
 @media print{.solo-hero,.solo-tip,.solo-foot{display:none !important}}
 
 /* ===== 居中弹窗：深墨蓝标题栏 + 金线 + ⚠（填错规则提醒 / 确认） ===== */
@@ -108,17 +120,17 @@ body{background:var(--bg) !important}
   }catch(e){}
 })();
 </script>
-<script src="data.js?v=202611262150"></script>
-<script src="guard.js?v=202611262150"></script>
-<script src="store.js?v=202611262150"></script>
-<script src="labdata.js?v=202611262150"></script>
-<script src="labdata2.js?v=202611262150"></script>
-<script src="labcost.js?v=202611262150"></script>
-<script src="ledger.js?v=202611262150"></script>
-<script src="labledger.js?v=202611262150"></script>
-<script src="labrecord.js?v=202611262150"></script>
-<script src="labpages.js?v=202611262150"></script>
-<script src="labauth.js?v=202611262150"></script>
+<script src="data.js?v=202611262160"></script>
+<script src="guard.js?v=202611262160"></script>
+<script src="store.js?v=202611262160"></script>
+<script src="labdata.js?v=202611262160"></script>
+<script src="labdata2.js?v=202611262160"></script>
+<script src="labcost.js?v=202611262160"></script>
+<script src="ledger.js?v=202611262160"></script>
+<script src="labledger.js?v=202611262160"></script>
+<script src="labrecord.js?v=202611262160"></script>
+<script src="labpages.js?v=202611262160"></script>
+<script src="labauth.js?v=202611262160"></script>
 <script>
 /* ===== 精简工具函数（仅生成器用到） ===== */
 function escHtml(s){ return String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
@@ -176,7 +188,7 @@ function downloadCsv(filename, rows){
 window.toast=toast; window.dlg=dlg; window.downloadCsv=downloadCsv;
 window.esc=esc; window.escHtml=escHtml;
 </script>
-<script src="labbench.js?v=202611262150"></script>
+<script src="labbench.js?v=202611262160"></script>
 <script>
 /* 启动：只渲染原始记录生成器。标准溶液编辑保留负责人口令闸门。
    数据仅存本机；填错由各字段校验 + 规则弹窗提示。 */
