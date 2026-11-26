@@ -2,6 +2,10 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<script>document.documentElement.classList.add("solo");</script>
 <script>
 /* ★ 独立站数据隔离（2026-11-19）：与主站完全分开，互不影响。
    主站 key 不加前缀；本站统一加 recapp: 前缀。
@@ -1725,13 +1729,21 @@ body.nav-open .burger span:nth-child(3){transform:translateY(-6px) rotate(-45deg
 </style>
 <style>a[href*="infant-record-app"]{display:none!important}</style>
 <style id="soloStyle">
-/* ===== 独立站：分析检测中心 · 原始记录生成系统 ===== */
+/* ===== 独立站：分析检测中心 · 原始记录生成系统 =====
+   从第一帧起就锁死：旧系统的顶栏 / 侧栏 / 首页 / 其它视图一律不渲染。
+   规则挂在 html.solo 上（head 里第一行 script 即刻添加），不等底部脚本，
+   避免 route() 抢先渲染首页造成「打开先看到旧系统」。 */
 html,body{background:var(--bg) !important}
-body.solo{background:var(--bg) !important}
-body.solo .main{padding:0 !important}
-body.solo #v-lab{display:block !important;padding:0 !important}
-body.solo #v-lab .notice{display:none !important}
-body.solo #labTabs{display:none !important}
+html.solo body{background:var(--bg) !important}
+/* 旧系统外壳：顶栏、侧栏、遮罩、页脚、导航 —— 全部隐藏 */
+html.solo .topbar,html.solo #side,html.solo #sideMask,
+html.solo footer.disclaimer,html.solo .nav,
+html.solo .menu-btn,html.solo .top-actions{display:none !important}
+/* 除原始记录页外，所有视图一律不显示（含首页） */
+html.solo .view{display:none !important}
+html.solo #v-lab{display:block !important;padding:0 !important}
+html.solo #v-lab .notice,html.solo #labTabs{display:none !important}
+html.solo .main{padding:0 !important;margin:0 !important;width:100% !important}
 /* 顶部居中品牌头 */
 .solo-hero{
   margin:0 0 22px;padding:30px 24px 26px;text-align:center;
@@ -1751,7 +1763,7 @@ body.solo #labTabs{display:none !important}
   background:#fff;border:1px solid var(--line);box-shadow:var(--sh-1);color:var(--ink2);font-size:12.5px}
 .solo-tip b{color:var(--brand)}
 .solo-tip .dot{flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 4px var(--teal-soft)}
-body.solo .solo-foot{text-align:center;color:var(--ink3);font-size:11.5px;padding:26px 12px 8px}
+html.solo .solo-foot{text-align:center;color:var(--ink3);font-size:11.5px;padding:26px 12px 8px}
 @media(max-width:700px){.solo-hero{padding:24px 16px 22px}.solo-hero h1{font-size:20px;letter-spacing:1px}.solo-wrap{padding:0 12px 40px}}
 @media print{.solo-hero,.solo-tip,.solo-foot{display:none !important}}
 </style>
@@ -2385,7 +2397,7 @@ body.solo .solo-foot{text-align:center;color:var(--ink3);font-size:11.5px;paddin
      光标回开头、页面高度变 → 抖动。这个脚本全局兜底。 -->
 <script src="focus.js"></script>
 <!-- ★ 视觉重设计（2026-11-01）★ 深墨蓝 + 翡翠金 · 必须放在最后才能覆盖旧样式 -->
-<link rel="stylesheet" href="theme.css?v=202611262000">
+<link rel="stylesheet" href="theme.css?v=202611262050">
 <!-- ★ 用户状态持久化（2026-11-01）★ 必须排在 workbench.js 之前 -->
 <script src="store.js"></script>
 <!-- ★ 删除权限与二次确认（2026-11-03）★
@@ -2393,35 +2405,35 @@ body.solo .solo-foot{text-align:center;color:var(--ink3);font-size:11.5px;paddin
      且在 jsa/ledger/workbench/labbench 之前（那些模块调用 Guard）。 -->
 <script src="guard.js"></script>
 <!-- ★ 实验室台账数据（2026-11-01）★ 设备/试剂/留样/质控/人员/能力矩阵 -->
-<script src="labdata.js?v=202611262000"></script>
+<script src="labdata.js?v=202611262050"></script>
 <!-- ★ 实验室新增 8 个模块的种子数据（2026-11-01）★ 委托单/CAPA/排班/配制/出入库/报告/内审/环境 -->
-<script src="labdata2.js?v=202611262000"></script>
-<script src="labcost.js?v=202611262000"></script>
+<script src="labdata2.js?v=202611262050"></script>
+<script src="labcost.js?v=202611262050"></script>
 <!-- ★ 通用台账工作台框架（2026-11-01）★ 可编辑 · 可联动 · 可导入导出 -->
 <script src="ledger.js"></script>
 <!-- ★ 实验室台账注册（2026-11-01）★ 10 个台账挂到框架上 -->
-<script src="labledger.js?v=202611262000"></script>
+<script src="labledger.js?v=202611262050"></script>
 <!-- ★ JSA 工作台（2026-11-01）★ 可编辑 · 可联动 · 可交付 -->
 <script src="jsa.js"></script>
 <!-- ★ 原始记录 9 个项目模板（2026-11-15，由 9 份 Word 原表生成）★ 必须在 labbench.js 之前 -->
-<script src="labrecord.js?v=202611262000"></script>
+<script src="labrecord.js?v=202611262050"></script>
 <!-- ★ 9 份 Word 原表「整页原版式」位图 + 动态字段精确坐标（Word 自己导出的 PDF 逐页渲染） -->
-<script src="labpages.js?v=202611262000"></script>
+<script src="labpages.js?v=202611262050"></script>
 <!-- ★ 实验室管理台账工具（2026-11-01）★ 设备/试剂/留样/QC/PT/原始记录 -->
 <!-- ★ 按操作人锁项目（共用电脑）：必须在 labbench.js 之前 -->
-<script src="labauth.js?v=202611262000"></script>
-<script src="labbench.js?v=202611262000"></script>
+<script src="labauth.js?v=202611262050"></script>
+<script src="labbench.js?v=202611262050"></script>
 <!-- ★ 工具工作台引擎（2026-10-22）★ 34 个可交互工具的实现 -->
-<script src="workbench.js?v=202611262000"></script>
+<script src="workbench.js?v=202611262050"></script>
 <!-- ★ 工具工作台的导入/导出/复制图（2026-11-04）★ 必须排在 workbench.js 之后 -->
 <script src="qwio.js"></script>
 <!-- ★ 小白引导 + 公式术语（2026-11-04 晚）★ -->
 <script src="qwform.js"></script>
-<script src="qwguide.js?v=202611262000"></script>
+<script src="qwguide.js?v=202611262050"></script>
 <!-- ★ 工具之间的关联性（2026-11-04 晚）★ -->
-<script src="qwlink.data.js?v=202611262000"></script>
-<script src="qwlink.js?v=202611262000"></script>
-<script src="qms-haccp.js?v=202611262000"></script>
+<script src="qwlink.data.js?v=202611262050"></script>
+<script src="qwlink.js?v=202611262050"></script>
+<script src="qms-haccp.js?v=202611262050"></script>
 <!-- data.js 缺失时给出明确提示，不能静默空白 -->
 <script>
 if(!window.STDWATCH_DATA){
@@ -6729,6 +6741,15 @@ if(window.addEventListener){
 /* 路由 */
 const TITLES={home:"今日待办",list:"标准清单",law:"法规与体系",cnas:"认可规范（CNAS）",refs:"通则引用标准",detail:"标准详情",method:"检测方法原理",mdetail:"方法原理详情",lab:"日常管理",jsa:"工作安全分析 JSA",qmtools:"质量管理工具",rdtools:"研发管理",subs:"我的订阅",alerts:"提醒中心",admin:"管理后台"};
 function route(){
+  /* ★ 独立站：无论地址栏 hash 是什么，永远只进原始记录页，绝不渲染旧系统首页 */
+  if(document.documentElement.classList.contains("solo")){
+    history.replaceState(null,"",location.pathname+location.search);
+    $$(".view").forEach(s=>s.classList.add("hide"));
+    $("#v-lab").classList.remove("hide");
+    $("#pgTitle") && ($("#pgTitle").textContent="原始记录生成");
+    if(typeof renderLab==="function") renderLab();
+    return;
+  }
   const h=(location.hash||"#home").slice(1);
   const OK=["home","list","law","cnas","refs","detail","method","mdetail","lab","jsa","qmtools","rdtools","subs","alerts","admin"];
   const v = OK.includes(h) ? h : "home";
