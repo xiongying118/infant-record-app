@@ -2253,7 +2253,7 @@
     var r=LR_SYNC_RESULT||{};
     lrAlert("试剂系统同步结果：\n\n读到 "+(r.total||0)+" 条，匹配 "+(r.hit||0)+
       " 条，更新 "+(r.fields||0)+" 个日期"+(r.miss?("；"+r.miss+" 条名称对不上"):"")+"。"+
-      (!r.total?"\n\n请先在「打开试剂效期管理」里导入台账，再回来点同步。":
+      (!r.total?"\n\n请先导入台账，再回来点同步。":
        (!r.hit?"\n\n名称对不上——请在试剂系统里把溶液名改成和这里一致（如 VB1→维生素B1）。":"")));
   }
   function lrSolPanelHtml(){
@@ -2271,8 +2271,6 @@
       '填「有效期」数字选天/月自动生成有效期至（如 20261119 + 3月 → 20270218）。'+
       '<b>外购</b>的：编码和有效期至手填，前缀填错会弹窗拦下。</div>'+
       '<div class="lr-solacts">'+
-        '<a class="btn sm pri" href="reagent/" target="_blank" rel="noopener" '+
-          'style="text-decoration:none;display:inline-flex;align-items:center;gap:4px">🔗 打开试剂效期管理</a>'+
         '<button type="button" class="btn sm" onclick="LAB.lrReagentSyncNow()">🔄 立即从试剂系统同步</button>'+
         '<label class="btn sm" style="cursor:pointer;margin:0;display:inline-flex;align-items:center">'+
           '↙ 从旧系统导入一次'+
@@ -3400,7 +3398,7 @@
     h.push("<tr><th>复核人签字</th><td>"+esc(REC.sign["复核人"]||"")+"</td><th>日期</th><td>"+esc(REC.sign["日期"]||"")+"</td></tr>");
     h.push("</tbody></table>");
     h.push("<p style='font-size:8.5pt;color:#555;margin-top:12pt'>本记录须现场手写，不得事后补记。"
-      +"由「食品质量与安全管理系统」生成空白表单框架。</p>");
+      +"由「分析检测中心 · 原始记录生成系统」生成空白表单框架。</p>");
     h.push("</body></html>");
     w.document.write(h.join("\n"));
     w.document.close();

@@ -46,7 +46,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>食品质量与安全管理系统 · 婴配标准变更提醒</title>
+<title>分析检测中心 · 原始记录生成系统</title>
 <!-- ★ favicon（2026-11-04）★
      不声明 favicon 时浏览器会自动去请求 /favicon.ico → 404，
      控制台每次都报错。加上这个声明后就不会再请求了。 -->
@@ -1718,7 +1718,39 @@ body.nav-open .burger span:nth-child(3){transform:translateY(-6px) rotate(-45deg
 @media(max-width:480px){.lr-dlg-b{padding:18px 18px 6px;font-size:14px}.lr-dlg-f{padding:14px 18px 18px}}
 
 </style>
-<style>a[href*="infant-record-app"]{display:none!important}</style></head>
+<style>a[href*="infant-record-app"]{display:none!important}</style>
+<style id="soloStyle">
+/* ===== 独立站：分析检测中心 · 原始记录生成系统 ===== */
+html,body{background:var(--bg) !important}
+body.solo{background:var(--bg) !important}
+body.solo .main{padding:0 !important}
+body.solo #v-lab{display:block !important;padding:0 !important}
+body.solo #v-lab .notice{display:none !important}
+body.solo #labTabs{display:none !important}
+/* 顶部居中品牌头 */
+.solo-hero{
+  margin:0 0 22px;padding:30px 24px 26px;text-align:center;
+  background:linear-gradient(135deg,#12305c 0%,#1b3a6b 55%,#245089 100%);
+  border-radius:0 0 22px 22px;color:#fff;position:relative;overflow:hidden;
+  box-shadow:0 8px 24px rgba(16,40,78,.18);
+}
+.solo-hero:before,.solo-hero:after{content:"";position:absolute;border-radius:50%;pointer-events:none}
+.solo-hero:before{width:320px;height:320px;right:-90px;top:-190px;background:radial-gradient(circle,rgba(201,162,39,.28),transparent 70%)}
+.solo-hero:after{width:260px;height:260px;left:-110px;bottom:-190px;background:radial-gradient(circle,rgba(14,124,107,.25),transparent 70%)}
+.solo-hero .mark{font-size:26px;line-height:1;margin-bottom:10px;color:#e8c95a}
+.solo-hero h1{margin:0;font-size:26px;font-weight:750;letter-spacing:3px;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.18)}
+.solo-hero .rule{width:70px;height:3px;margin:13px auto 10px;border-radius:3px;background:linear-gradient(90deg,transparent,#e8c95a,transparent)}
+.solo-hero p{margin:0;font-size:13px;letter-spacing:1px;color:#cfe0f5}
+.solo-wrap{max-width:1180px;margin:0 auto;padding:0 22px 60px}
+.solo-tip{display:flex;align-items:center;gap:10px;margin:0 0 16px;padding:11px 16px;border-radius:12px;
+  background:#fff;border:1px solid var(--line);box-shadow:var(--sh-1);color:var(--ink2);font-size:12.5px}
+.solo-tip b{color:var(--brand)}
+.solo-tip .dot{flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 4px var(--teal-soft)}
+body.solo .solo-foot{text-align:center;color:var(--ink3);font-size:11.5px;padding:26px 12px 8px}
+@media(max-width:700px){.solo-hero{padding:24px 16px 22px}.solo-hero h1{font-size:20px;letter-spacing:1px}.solo-wrap{padding:0 12px 40px}}
+@media print{.solo-hero,.solo-tip,.solo-foot{display:none !important}}
+</style>
+</head>
 <body>
 <!-- 数据加载失败兜底
      data.js 是独立文件（标准清单、法规、日志都在里面），网络或部署出问题时可能加载不到。
@@ -1748,7 +1780,7 @@ body.nav-open .burger span:nth-child(3){transform:translateY(-6px) rotate(-45deg
   <!-- ============ 侧边栏 ============ -->
   <aside class="side" id="side">
     <div class="brand">
-      <h1>食品质量与安全管理系统</h1>
+      <h1>分析检测中心 · 原始记录生成系统</h1>
     </div>
     <nav class="nav">
       <div class="nav-label">日常</div>
@@ -1817,7 +1849,7 @@ body.nav-open .burger span:nth-child(3){transform:translateY(-6px) rotate(-45deg
     <div class="topbrand">
       <div class="logo">🛡️</div>
       <div class="tt">
-        <h1>食品质量与安全管理系统</h1>
+        <h1>分析检测中心 · 原始记录生成系统</h1>
         <div class="tt-sub">标准变更 · 实验室管理 · 质量管理 · 研发管理</div>
       </div>
     </div>
@@ -1829,7 +1861,7 @@ body.nav-open .burger span:nth-child(3){transform:translateY(-6px) rotate(-45deg
               aria-controls="side"><span></span><span></span><span></span></button>
       <h2 id="pgTitle">今日待办</h2>
       <!-- 窄屏侧栏收进抽屉，看不到系统名了 → 顶栏补一个小标识 -->
-      <span class="mbrand">食品质量与安全管理系统</span>
+      <span class="mbrand">分析检测中心 · 原始记录生成系统</span>
       <div class="sp"></div>
       <div class="search" title="回车后在「标准清单」里检索">
         <span class="muted">🔍</span>
@@ -6768,35 +6800,51 @@ setTimeout(updateAlertBadge, 0);
 </script>
 
 <script>
-/* ================================================================
-   ★ 独立入口：只显示「原始记录生成」这一块。
-   本文件由 index.html 复制而来，只多了下面这段精简脚本；
-   业务逻辑（勾选 / 打印 / 标准溶液口令 / Word 原页矢量底图）全部复用同一套 js/css。
-   若 index.html 骨架有大改，重新复制并保留这段脚本即可。
-   ================================================================ */
+/* ===== 独立站启动：只显示原始记录生成，居中标题 ===== */
 (function(){
+  var TITLE="分析检测中心 · 原始记录生成系统";
+  function buildShell(){
+    if(document.getElementById("soloHero")) return;
+    var main=document.querySelector(".main");
+    if(!main) return;
+    var hero=document.createElement("div");
+    hero.className="solo-hero"; hero.id="soloHero";
+    hero.innerHTML='<div class="mark">⚗</div><h1>'+TITLE+'</h1><div class="rule"></div>'+
+      '<p>原始记录生成 · 空白表单框架 · 现场手填签字</p>';
+    main.insertBefore(hero, main.firstChild);
+    var lab=document.getElementById("v-lab");
+    var wrap=document.createElement("div");
+    wrap.className="solo-wrap";
+    if(lab){
+      var tip=document.createElement("div"); tip.className="solo-tip";
+      tip.innerHTML='<span class="dot"></span><span><b>使用说明</b>　选检测项目 → 勾选项目 → 生成空白记录表 → 打印手签。数据只保存在本机浏览器。</span>';
+      wrap.appendChild(tip);
+      var body=document.getElementById("labBody");
+      if(body){ wrap.appendChild(body); }
+      var foot=document.createElement("div"); foot.className="solo-foot";
+      foot.textContent=TITLE+"　·　数据本机保存，不上传";
+      wrap.appendChild(foot);
+      lab.appendChild(wrap);
+    }
+  }
   function boot(){
-    document.title = "原始记录生成 · 婴配实验室";
-    ["side","sideMask"].forEach(function(id){
-      var e=document.getElementById(id); if(e) e.style.display="none";
-    });
+    document.title=TITLE;
+    document.body.classList.add("solo");
+    ["side","sideMask"].forEach(function(id){var e=document.getElementById(id);if(e)e.style.display="none";});
     var tb=document.querySelector(".topbrand"); if(tb) tb.style.display="none";
     var top=document.querySelector(".top"); if(top) top.style.display="none";
-    [].forEach.call(document.querySelectorAll(".view"), function(v){
-      if(v.id!=="v-lab") v.classList.add("hide");
-    });
+    var f=document.querySelector("footer.disclaimer"); if(f) f.style.display="none";
+    [].forEach.call(document.querySelectorAll(".view"),function(v){if(v.id!=="v-lab")v.classList.add("hide");});
     var lab=document.getElementById("v-lab");
-    if(lab){
-      lab.classList.remove("hide");
-      var nt=lab.querySelector(".notice"); if(nt) nt.style.display="none";
-      lab.style.paddingTop="42px";
-    }
+    if(lab){lab.classList.remove("hide");var nt=lab.querySelector(".notice");if(nt)nt.style.display="none";}
     var lt=document.getElementById("labTabs"); if(lt) lt.style.display="none";
-    if(window.LAB && typeof LAB.go==="function"){ try{ LAB.go("record"); }catch(e){} }
+    buildShell();
+    if(window.LAB&&typeof LAB.go==="function"){
+      try{LAB.render();LAB.go("record");}catch(e){}
+    }
   }
-  if(document.readyState==="loading"){ document.addEventListener("DOMContentLoaded", boot); }
-  else boot();
-  window.addEventListener("hashchange", function(){ setTimeout(boot, 0); });
+  if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",boot);}else boot();
+  window.addEventListener("hashchange",function(){setTimeout(boot,0);});
 })();
 </script>
 <!-- 独立站点：与主站完全隔离（独立仓库 / 独立 URL / 无返回入口） -->

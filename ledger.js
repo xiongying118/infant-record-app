@@ -435,7 +435,7 @@
     });
     h.push("</tbody></table>");
     if(d.exportNote) h.push("<p class='note'>"+esc(d.exportNote)+"</p>");
-    h.push("<p class='note'>由「食品质量与安全管理系统」导出。本表不含标准正文。</p>");
+    h.push("<p class='note'>由「分析检测中心 · 原始记录生成系统」导出。本表不含标准正文。</p>");
     h.push("</body></html>");
 
     var blob = new Blob(["﻿", h.join("\n")], {type:"application/msword;charset=utf-8"});
