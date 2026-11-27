@@ -2611,6 +2611,14 @@
   function lrPrintCount(){
     return lrActiveRows().length*lrSelected().length;
   }
+  /* ★ 当前选中项目提示条（2026-11-27）：放在「取消选择」按钮左边 */
+  var LR_SELCUR_ON ="display:inline-flex;align-items:center;padding:4px 10px;border-radius:999px;background:#eaf1fc;border:1px solid #c7d9f4;color:#16356b;font-size:12.5px;font-weight:600";
+  var LR_SELCUR_OFF="display:inline-flex;align-items:center;padding:4px 10px;border-radius:999px;background:#f5f7fa;border:1px solid #e3e8f0;color:#94a3b8;font-size:12.5px";
+  function lrSelCurHtml(){
+    var cur=lrSelected()[0];
+    return '<span id="lrSelCur" style="'+(cur?LR_SELCUR_ON:LR_SELCUR_OFF)+'">'+
+      (cur?('已选：<b>'+esc(cur.name)+'</b>'+(cur.unit?'（'+esc(cur.unit)+'）':'')):'未选项目')+'</span>';
+  }
   function viewRecordByProject(){
     /* 每次进记录页先挂同步钩子并拉一次试剂系统数据（同域才读得到，读不到就什么都不做） */
     try{ lrReagentHook(); lrReagentSync(); }catch(e){}
@@ -2646,6 +2654,7 @@
     h+=lrSolPanelHtml();
     h+='<div class="card" style="margin-bottom:12px"><div class="card-h">'+
       '<h3>选择检测项目</h3><span class="muted">当前 '+gp.length+' 个 · 单选，选中即出预览；再点一次或下面按钮可取消</span><div class="sp"></div>'+
+      lrSelCurHtml()+' '+
       '<button class="btn sm" id="lrClearBtn" onclick="LAB.lrNone()"'+(n?'':' style="display:none"')+'>✕ 取消选择</button> '+
       '<button class="btn pri sm" id="lrPrintBtn" onclick="LAB.lrPrint()">🖨 打印（'+total+' 份）</button></div>'+
       lrGroupTabsHtml()+
@@ -2912,6 +2921,12 @@
     if(btn) btn.textContent="🖨 打印（"+lrPrintCount()+" 份）";
     var clearBtn=document.getElementById("lrClearBtn");
     if(clearBtn) clearBtn.style.display=n?"":"none";
+    var selCur=document.getElementById("lrSelCur");
+    if(selCur){
+      var cur=lrSelected()[0];
+      selCur.setAttribute("style",cur?LR_SELCUR_ON:LR_SELCUR_OFF);
+      selCur.innerHTML=cur?('已选：<b>'+esc(cur.name)+'</b>'+(cur.unit?'（'+esc(cur.unit)+'）':'')):'未选项目';
+    }
     var s=lrSel(), ps=lrGroupProjects();
     [].forEach.call(document.querySelectorAll(".lr-chip"),function(el,i){
       var p=ps[i]; if(!p) return;
