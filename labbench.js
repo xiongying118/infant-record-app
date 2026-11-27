@@ -2405,9 +2405,13 @@
     if(!LRSEL){
       LRSEL={};
       var s=global.Store?global.Store.get("lab.record.sel.v1",null):null;
-      /* 单选：旧版存了多个也只保留第一个，避免刷新后又变回多选 */
-      if(s&&s.length){ LRSEL[s[0]]=1; }
-      else { var ps=lrProjects(); if(ps.length) LRSEL[ps[0].key]=1; }
+      /* ★ 2026-11-27：区分「首次打开」和「用户主动取消」——
+         存过空数组 [] 就是明确不要选项目，刷新后保持空，不再默认塞第一个。 */
+      if(s===null){
+        var ps=lrProjects(); if(ps.length) LRSEL[ps[0].key]=1;
+      } else if(s.length){
+        LRSEL[s[0]]=1;        /* 单选：旧版存了多个也只保留第一个 */
+      }
     }
     return LRSEL;
   }
@@ -2540,7 +2544,7 @@
   }
   function lrPreviewHtml(){
     var picked=lrSelected();
-    if(!picked.length) return '<div class="card empty">上面选一个检测项目，对应的 Word 原始记录就出来。</div>';
+    if(!picked.length) return '<div class="card empty">还没有选检测项目。点上面的项目卡片即可预览；再点一次或点「✕ 取消选择」可以取消。</div>';
     /* ★ 单选直出：选中项目即渲染页面，不再需要点第二下 */
     var cur = picked[0];
     LR_PREVIEW_KEY = cur.key;
@@ -2641,13 +2645,14 @@
        ★ 按检测项目过滤，默认只出当前项目的，点「全部」才出全部 */
     h+=lrSolPanelHtml();
     h+='<div class="card" style="margin-bottom:12px"><div class="card-h">'+
-      '<h3>选择检测项目</h3><span class="muted">当前 '+gp.length+' 个 · 单选，选中即出页面预览</span><div class="sp"></div>'+
+      '<h3>选择检测项目</h3><span class="muted">当前 '+gp.length+' 个 · 单选，选中即出预览；再点一次或下面按钮可取消</span><div class="sp"></div>'+
+      '<button class="btn sm" id="lrClearBtn" onclick="LAB.lrNone()"'+(n?'':' style="display:none"')+'>✕ 取消选择</button> '+
       '<button class="btn pri sm" id="lrPrintBtn" onclick="LAB.lrPrint()">🖨 打印（'+total+' 份）</button></div>'+
       lrGroupTabsHtml()+
       '<div class="lr-chips">'+gp.map(function(p){
         return '<label class="lr-chip '+(s[p.key]?"on":"")+'">'+
           '<input type="radio" name="lrProject" '+(s[p.key]?"checked":"")+
-          ' onchange="LAB.lrToggle(\''+esc(p.key)+'\')">'+
+          ' onclick="LAB.lrToggle(\''+esc(p.key)+'\')">'+
           '<b>'+esc(p.name)+'</b>'+(p.unit?'<span class="muted">'+esc(p.unit)+'</span>':'')+
           '</label>';
       }).join("")+'</div></div>';
@@ -2905,6 +2910,8 @@
     lrBindPageLoad();
     var n=lrSelected().length, rows=lrActiveRows().length, btn=document.getElementById("lrPrintBtn");
     if(btn) btn.textContent="🖨 打印（"+lrPrintCount()+" 份）";
+    var clearBtn=document.getElementById("lrClearBtn");
+    if(clearBtn) clearBtn.style.display=n?"":"none";
     var s=lrSel(), ps=lrGroupProjects();
     [].forEach.call(document.querySelectorAll(".lr-chip"),function(el,i){
       var p=ps[i]; if(!p) return;
@@ -2916,9 +2923,15 @@
   }
   function lrToggle(k){
     if(!lrCan(k)){ lrAlert("【"+((lrProject(k)||{}).name||k)+"】不是当前操作人负责的项目，已锁定不能改。切到对应的操作人才能用。"); return; }
-    LRSEL={}; LRSEL[k]=1;        // ★ 单选：一次只留一个项目
-    LRSOLVIEW=k;                 // 标准溶液跟着当前项目走
-    LR_PREVIEW_KEY=k;            // 预览直接出该项目，不需要再点一次
+    var s=lrSel();
+    if(s[k]){
+      /* ★ 再点一次已选中的项目 = 取消选择，预览回到空态 */
+      LRSEL={}; LR_PREVIEW_KEY=null; LRSOLVIEW=null;
+    } else {
+      LRSEL={}; LRSEL[k]=1;      // ★ 单选：一次只留一个项目
+      LRSOLVIEW=k;               // 标准溶液跟着当前项目走
+      LR_PREVIEW_KEY=k;          // 预览直接出该项目，不需要再点一次
+    }
     lrSave(); lrRedraw();
   }
   function lrAll(){
@@ -2926,8 +2939,9 @@
     lrToggle(ps[0].key);         // 「全选本组」在单站改为选本组第一个
   }
   function lrNone(){
-    /* 单选站不允许完全不选：退回第一个项目 */
-    var ps=lrVisiblePs(); if(ps.length) lrToggle(ps[0].key);
+    /* ★ 取消选择：清空项目，预览回到空态；刷新后也不会自己选回去 */
+    LRSEL={}; LR_PREVIEW_KEY=null; LRSOLVIEW=null;
+    lrSave(); lrRedraw();
   }
   function lrNotes(){ return false; }   /* 兼容旧调用，方法说明已在原表内 */
   function lrMode(m){ LRMODE=m; render(); }
