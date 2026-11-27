@@ -2587,7 +2587,7 @@
     return '<div class="lr-importbar">'+
       '<button class="btn sm" onclick="LAB.lrAddRow()">＋ 添加一行</button>'+
       '<label class="btn sm lr-filebtn" for="lrFile">📥 导入 Excel / CSV</label>'+
-      '<input type="file" id="lrFile" accept=".xlsx,.xls,.csv,.txt" style="display:none" '+
+      '<input type="file" id="lrFile" accept=".xlsx,.xls,.xltx,.xlsm,.xltm,.xlt,.csv,.txt" style="display:none" '+
         'onchange="LAB.lrImportFile(this)">'+
       '<button class="btn sm" onclick="LAB.lrTogglePaste()">📋 粘贴 Excel 区域</button>'+
       '<button class="btn sm" onclick="LAB.lrTemplate()">⬇ 下载 Excel 模板</button>'+
@@ -2761,16 +2761,23 @@
       if(k&&k!=="_no") hits++;
       map.push(k);
     });
-    return hits>=2?map:null;
+    /* ★ 命中 1 个关键词就认作表头（原来要 2 个，导致只写「样品名称」一列的表被误当数据） */
+    return hits>=1?map:null;
   }
   function lrImportText(txt,forceSep){
     var lines=String(txt||"").replace(/\r/g,"").split("\n")
       .filter(function(l){ return l.trim(); });
     if(!lines.length){ lrStatMsg("没有读到数据行"); return 0; }
     var sep=forceSep||(lines[0].indexOf("\t")>=0?"\t":",");
-    var first=lrSplit(lines[0],sep), map=lrHeadMap(first), start=0;
-    if(map) start=1;
+    /* ★ 自动跳过标题行：从前往后找第一行像表头的，最多看前 5 行 */
+    var map=null, start=0, headIdx=-1;
+    for(var hi=0;hi<Math.min(5,lines.length);hi++){
+      var hm=lrHeadMap(lrSplit(lines[hi],sep));
+      if(hm){ map=hm; headIdx=hi; break; }
+    }
+    if(map){ start=headIdx+1; }
     else {
+      var first=lrSplit(lines[headIdx>=0?headIdx:0],sep);
       var drop=(first.length>4&&/^\d+$/.test(first[0]))?1:0;
       map=[];
       for(var j=0;j<first.length;j++) map.push(j<drop?"_no":(LR_KEYS[j-drop]||"_no"));
@@ -2810,7 +2817,8 @@
   }
   function lrImportFile(inp){
     var f=inp&&inp.files&&inp.files[0]; if(!f) return;
-    var nm=(f.name||"").toLowerCase(), xl=/\.(xlsx|xls)$/.test(nm);
+    /* ★ 兼容 Excel 模板/宏格式：.xltx/.xlsm/.xltm/.xlt 都是 OOXML 或 BIFF，SheetJS 都能读 */
+    var nm=(f.name||"").toLowerCase(), xl=/\.(xlsx|xls|xltx|xlsm|xltm|xlt)$/.test(nm);
     var fr=new FileReader();
     fr.onload=function(e){
       var buf=e.target.result;
